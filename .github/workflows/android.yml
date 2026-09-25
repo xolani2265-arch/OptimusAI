@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -24,29 +25,42 @@ jobs:
         with:
           gradle-version: "8.13"
 
+      - name: Diagnose Android SDK
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          java -version
+          find "$ANDROID_HOME/cmdline-tools" -maxdepth 4 -type f -name sdkmanager -print 2>/dev/null || true
+          find "$ANDROID_HOME" -maxdepth 4 -type d -name "build-tools" -print 2>/dev/null || true
+          find "$ANDROID_HOME" -maxdepth 4 -type d -name "platforms" -print 2>/dev/null || true
+
       - name: Configure Android SDK
         shell: bash
         run: |
-          set -e
-          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          set -euo pipefail
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit 2>/dev/null || true)"
           if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager not found in $ANDROID_HOME/cmdline-tools"
-            find "$ANDROID_HOME" -maxdepth 4 -type f -name sdkmanager -print || true
+            echo "::error::sdkmanager was not found on the GitHub runner."
             exit 1
           fi
           SDK_BIN="$(dirname "$SDKMANAGER")"
           echo "$SDK_BIN" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          "$SDKMANAGER" --version
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0"
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --version
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Validate Gradle configuration
+        run: gradle --no-daemon tasks --stacktrace
 
       - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: optimus-ai-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
