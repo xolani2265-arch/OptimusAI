@@ -12,8 +12,8 @@ android {
         applicationId = "com.optimus.ai"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.2.1"
+        versionCode = 14
+        versionName = "1.3.0"
     }
 
     compileOptions {
@@ -23,6 +23,14 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Optimus uses only Kotlin/AndroidX code today, so no native ABI
+    // split is needed. This keeps one APK installable across common phones.
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
