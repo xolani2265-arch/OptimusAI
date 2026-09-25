@@ -58,9 +58,26 @@ jobs:
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug --stacktrace
 
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          if [ -z "$APK" ]; then
+            echo "::error::APK was not produced."
+            exit 1
+          fi
+          echo "APK=$APK"
+          ls -lh "$APK"
+          sha256sum "$APK"
+          APKTOOL="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner -print -quit 2>/dev/null || true)"
+          if [ -n "$APKTOOL" ]; then
+            "$APKTOOL" verify --verbose "$APK"
+          fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: optimus-ai-debug-apk
+          name: optimus-ai-android13-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
