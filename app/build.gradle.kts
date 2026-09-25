@@ -12,8 +12,39 @@ android {
         applicationId = "com.optimus.ai"
         minSdk = 26
         targetSdk = 36
-        versionCode = 15
-        versionName = "1.4.0"
+        versionCode = 16
+        versionName = "1.5.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("OPTIMUS_KEYSTORE_PATH")
+            val keystorePassword = System.getenv("OPTIMUS_KEYSTORE_PASSWORD")
+            val keyPassword = System.getenv("OPTIMUS_KEY_PASSWORD")
+            val keyAlias = System.getenv("OPTIMUS_KEY_ALIAS")
+
+            if (!keystorePath.isNullOrBlank() &&
+                !keystorePassword.isNullOrBlank() &&
+                !keyPassword.isNullOrBlank() &&
+                !keyAlias.isNullOrBlank()
+            ) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                this.keyPassword = keyPassword
+                this.keyAlias = keyAlias
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            isDebuggable = true
+        }
+        release {
+            isDebuggable = false
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 
     compileOptions {
@@ -25,8 +56,6 @@ android {
         compose = true
     }
 
-    // Optimus uses only Kotlin/AndroidX code today, so no native ABI
-    // split is needed. This keeps one APK installable across common phones.
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
