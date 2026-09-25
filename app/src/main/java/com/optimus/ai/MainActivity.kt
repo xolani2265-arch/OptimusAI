@@ -99,52 +99,6 @@ fun OptimusApp(store:SecureTradeStore){
 
     var tab by remember{mutableIntStateOf(0)}
     var trades by remember{mutableStateOf(store.all())}
-    var message by remember{mutableStateOf("Ready")}
-    val equity=550.0+trades.sumOf{it.pnl}
-    val wins=trades.count{it.pnl>0}
-    val losses=trades.count{it.pnl<0}
-    MaterialTheme{
-        Scaffold(bottomBar={NavigationBar{
-            listOf("Dashboard","Journal","Diagnostics").forEachIndexed{i,n->
-                NavigationBarItem(selected=tab==i,onClick={tab=i},icon={},label={Text(n)})
-            }
-        }}){pad->
-            LazyColumn(Modifier.padding(pad).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-                item{Text("OPTIMUS AI",style=MaterialTheme.typography.headlineMedium);Text("Gold / XAUUSD • Risk-first analysis")}
-                when(tab){
-                    0->{
-                        item{Card{Column(Modifier.padding(16.dp)){Text("Account protection");Text("Starting equity: R550.00");Text("Journal equity: "+money(equity));Text("Recorded trades: "+trades.size)}}
-                        }
-                        item{Card{Column(Modifier.padding(16.dp)){Text("Analysis framework");Text("Multi-timeframe • ICT-style structure • macro/news evidence");Text("No trade is approved without a risk check.")}}}
-                        item{Button(onClick={message="Live analysis requires the secure market-data backend."}){Text("ANALYSE GOLD")};Text(message)}
-                        item{OutlinedButton(onClick={val t=Trade(UUID.randomUUID().toString(),"TEST",5.50,0.0,"Memory test",now());store.save(t);trades=store.all();message="Trade memory test saved securely."}){Text("TEST TRADE MEMORY")}}
-                    }
-                    1->{
-                        item{Card{Column(Modifier.padding(16.dp)){Text("Performance");Text("Wins: "+wins+"   Losses: "+losses);Text("Win rate: "+if(trades.isEmpty())"0.0" else String.format(Locale.US,"%.1f",wins*100.0/trades.size)+"%");Text("Net P&L: "+money(trades.sumOf{it.pnl}))}}}
-                        items(trades.size){i->val t=trades[i];Card{Column(Modifier.padding(14.dp)){Text(t.direction+" • "+t.setup);Text("Risk "+money(t.risk)+" • P&L "+money(t.pnl));Text(t.created)}}}
-                        if(trades.isEmpty())item{Text("No trades recorded yet.")}
-                    }
-                    else->{
-                        item{Card{Column(Modifier.padding(16.dp)){Text("Diagnostics");Text("Trade memory: "+runCatching{store.all();"HEALTHY"}.getOrElse{"ERROR"});Text("Risk guard: ENABLED");Text("Self-repair: controlled/reversible only");Text("APK self-modification: DISABLED")}}}
-                        item{Text("Technical incidents and repair attempts must be auditable; strategy and risk settings are not silently changed.")}
-                    }
-                }
-            }
-        }
-    }
-}@Composable
-fun OptimusApp(store:SecureTradeStore){
-    val bg = Color(0xFF070A10)
-    val panel = Color(0xFF10151F)
-    val panel2 = Color(0xFF151C28)
-    val cyan = Color(0xFF38D9FF)
-    val green = Color(0xFF35D07F)
-    val red = Color(0xFFFF5C73)
-    val muted = Color(0xFF8B96A8)
-    val gold = Color(0xFFF2C66D)
-
-    var tab by remember{mutableIntStateOf(0)}
-    var trades by remember{mutableStateOf(store.all())}
     var message by remember{mutableStateOf("System ready")}
     val equity=550.0+trades.sumOf{it.pnl}
     val wins=trades.count{it.pnl>0}
